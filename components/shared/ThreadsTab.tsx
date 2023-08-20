@@ -1,28 +1,59 @@
 import { redirect } from "next/navigation";
 
-// import { fetchCommunityPosts } from "@/lib/actions/community.actions";
-// import { fetchUserPosts } from "@/lib/actions/user.actions";
+
 
 import ThreadCard from "../cards/ThreadCard";
 import { fetchUserPosts } from "@/lib/actions/user.actions";
+import { fetchCommunityPosts } from "@/lib/actions/community.actions";
 
+interface Result {
+  name: string;
+  image: string;
+  id: string;
+  threads: {
+    _id: string;
+    text: string;
+    parentId: string | null;
+    author: {
+      name: string;
+      image: string;
+      id: string;
+    };
+    community: {
+      id: string;
+      name: string;
+      image: string;
+    } | null;
+    createdAt: string;
+    children: {
+      author: {
+        image: string;
+      };
+    }[];
+  }[];
+}
 
 interface Props {
-    currentUserId: string;
-    accountId: string;
-    accountType: string;
-  }
-
+  currentUserId: string;
+  accountId: string;
+  accountType: string;
+}
 
 const ThreadsTab = async ({ currentUserId, accountId, accountType }: Props) => {
+  let result: Result;
 
-    let result = await fetchUserPosts(accountId);
+  if (accountType === "Community") {
+    result = await fetchCommunityPosts(accountId);
+  } else {
+    result = await fetchUserPosts(accountId);
+  }
 
-    if(!result)redirect("/");
-return(
-   <section>
-
-{result.threads.map((thread:any) => (
+  if (!result) {
+    redirect("/");
+  }
+  return (
+    <section>
+      {result.threads.map((thread: any) => (
         <ThreadCard
           key={thread._id}
           id={thread._id}
@@ -47,10 +78,8 @@ return(
           comments={thread.children}
         />
       ))}
-
-   </section>
-
-)
-}
+    </section>
+  );
+};
 
 export default ThreadsTab;
